@@ -1,4 +1,8 @@
 # cuparkit-ml
 Machine learning tools and backend services for CUparkit
 
-# Dataset sources
+## Setup
+* Create a virtual environment
+* Install dependancies
+
+## Dataset sources

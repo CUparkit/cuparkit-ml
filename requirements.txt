@@ -1,0 +1,3 @@
+numpy==1.16.0
+pandas==0.24.0
+ish-parser==0.0.22
