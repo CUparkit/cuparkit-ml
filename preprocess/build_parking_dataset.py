@@ -78,7 +78,7 @@ def create_hourly_lot_datasets():
 			local_dt = local.localize(naive, is_dst=None)
 			utc_dt = local_dt.astimezone(pytz.utc)
 		except: # add an hour to fix this issue
-			local_dt = local.localize(datetime.fromtimestamp(naive) + timedelta(hours=1), is_dst=None)
+			local_dt = local.localize(datetime.datetime.fromtimestamp(naive) + datetime.timedelta(hours=1), is_dst=None)
 			utc_dt = local_dt.astimezone(pytz.utc)
 
 		day_of_week = utc_dt.weekday()
@@ -125,7 +125,7 @@ def create_hourly_weather_datasets():
 		
 	weather_df = pd.DataFrame(hourly_rows)
 
-	#temp['Datetime'] = temp['Datetime'].dt.round('H')
+	weather_df['Datetime'] = weather_df['Datetime'].dt.round('H')
 	#tmp['Datetime'].duplicated()
 	#tmp = tmp[~tmp['Datetime'].duplicated(keep='first')]
 	#park_df['Datetime'] = pd.to_datetime(park_df['Datetime'])
