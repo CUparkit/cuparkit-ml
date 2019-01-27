@@ -51,6 +51,9 @@ def create_hourly_lot_datasets():
 	print("Loading Santa Monica Parking dataset...")
 	park_df = pd.read_csv("datasets/santa_monica_parking/Parking_Lot_Counts.csv")
 
+	if row['Lot'] not in list(lot_details.keys()):
+		continue
+
 	hourly_rows = []
 	print("Parsing dates and times...")
 	for idx, row in park_df.iterrows():
@@ -78,7 +81,7 @@ def create_hourly_lot_datasets():
 			local_dt = local.localize(naive, is_dst=None)
 			utc_dt = local_dt.astimezone(pytz.utc)
 		except: # add an hour to fix this issue
-			pass
+			continue
 			#local_dt = local.localize(datetime.datetime.fromtimestamp(naive) + datetime.timedelta(hours=1), is_dst=None)
 			#utc_dt = local_dt.astimezone(pytz.utc)
 
