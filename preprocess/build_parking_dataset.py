@@ -78,15 +78,16 @@ def create_hourly_lot_datasets():
 			local_dt = local.localize(naive, is_dst=None)
 			utc_dt = local_dt.astimezone(pytz.utc)
 		except: # add an hour to fix this issue
-			local_dt = local.localize(datetime.datetime.fromtimestamp(naive) + datetime.timedelta(hours=1), is_dst=None)
-			utc_dt = local_dt.astimezone(pytz.utc)
+			pass
+			#local_dt = local.localize(datetime.datetime.fromtimestamp(naive) + datetime.timedelta(hours=1), is_dst=None)
+			#utc_dt = local_dt.astimezone(pytz.utc)
 
 		day_of_week = utc_dt.weekday()
 
 		#if row['Available']/lot_details[row['Lot']]['capacity'] > 1.0:
 		#	print(row['Lot'])
 
-		row_dict = OrderedDict({'Data/Time': row['Date/Time'], 'Datetime': utc_dt, 'Date': date, 'Month': month, 'Day': day_of_week, 'Time': time, 
+		row_dict = OrderedDict({'Data/Time': row['Date/Time'], 'Datetime': utc_dt, 'Date': date, 'Month': month-1, 'Day': day_of_week, 'Time': time, 
 								'Lot id': lot_details[row['Lot']]['id'] , 'Lot name': row['Lot'], 
 								'Available': row['Available'], 'Percent Available': row['Available']/lot_details[row['Lot']]['capacity']}) 
 
@@ -118,7 +119,7 @@ def create_hourly_weather_datasets():
 			try:
 				precip = rpt.get_additional_field('AA1').precipitation['depth']
 			except:
-				precip = "MISSING"
+				precip = 0.0
 			row_dict = {'Datetime': rpt.datetime, 'Air temperature': rpt.air_temperature, 'Preciptation': precip}
 			print(type(rpt.datetime))
 			hourly_rows.append(row_dict)
@@ -126,9 +127,11 @@ def create_hourly_weather_datasets():
 	weather_df = pd.DataFrame(hourly_rows)
 
 	weather_df['Datetime'] = weather_df['Datetime'].dt.round('H')
-	#tmp['Datetime'].duplicated()
-	#tmp = tmp[~tmp['Datetime'].duplicated(keep='first')]
-	#park_df['Datetime'] = pd.to_datetime(park_df['Datetime'])
+	weather_df = weather_df[~weather_df['Datetime'].duplicated(keep='first')]
+	park_df['Datetime'] = pd.to_datetime(park_df['Datetime'])
+	merged_df = pd.merge(weather_df, park_df, how='outer', on='Datetime')
+
+	merged_df.to_csv('datasets/santa_monica_parking_with_weather.csv')
 
 if __name__ == '__main__':
 	#download_datasets()
