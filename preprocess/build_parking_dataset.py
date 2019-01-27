@@ -51,12 +51,12 @@ def create_hourly_lot_datasets():
 	print("Loading Santa Monica Parking dataset...")
 	park_df = pd.read_csv("datasets/santa_monica_parking/Parking_Lot_Counts.csv")
 
-	if row['Lot'] not in list(lot_details.keys()):
-		continue
-
 	hourly_rows = []
 	print("Parsing dates and times...")
 	for idx, row in park_df.iterrows():
+		if row['Lot'] not in list(lot_details.keys()):
+			continue
+
 		date_and_time = row['Date/Time']
 		date = date_and_time.split()[0]
 
