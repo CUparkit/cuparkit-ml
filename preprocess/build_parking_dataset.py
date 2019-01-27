@@ -1,7 +1,7 @@
 import os
 import sys
 import glob
-import datetime
+import pytz, datetime
 import numpy as np
 import pandas as pd					
 import urllib.request				# grab data from the web
@@ -49,7 +49,7 @@ def download_datasets():
 def create_hourly_lot_datasets():
 
 	print("Loading Santa Monica Parking dataset...")
-	park_df = pd.read_csv("datasets/santa_monica_parking/Parking_Lot_Counts_subset.csv")
+	park_df = pd.read_csv("datasets/santa_monica_parking/Parking_Lot_Counts.csv")
 
 	hourly_rows = []
 	print("Parsing dates and times...")
@@ -72,21 +72,27 @@ def create_hourly_lot_datasets():
 		day = int(date.split('/')[1])
 		year = int(date.split('/')[2])
 
-		date_obj = datetime.datetime(year, month, day, hr, mn, 0)
-		print(date_obj)
+		local = pytz.timezone('US/Pacific')
+		naive = datetime.datetime(year, month, day, hr, mn, 0, 0)
+		try:
+			local_dt = local.localize(naive, is_dst=None)
+			utc_dt = local_dt.astimezone(pytz.utc)
+		except: # add an hour to fix this issue
+			local_dt = local.localize(datetime.fromtimestamp(naive) + timedelta(hours=1), is_dst=None)
+			utc_dt = local_dt.astimezone(pytz.utc)
 
-		day_of_week = date_obj.weekday()
+		day_of_week = utc_dt.weekday()
 
 		#if row['Available']/lot_details[row['Lot']]['capacity'] > 1.0:
 		#	print(row['Lot'])
 
-		row_dict = OrderedDict({'Date': date, 'Month': month, 'Day': day_of_week, 'Time': time, 
+		row_dict = OrderedDict({'Data/Time': row['Date/Time'], 'Datetime': utc_dt, 'Date': date, 'Month': month, 'Day': day_of_week, 'Time': time, 
 								'Lot id': lot_details[row['Lot']]['id'] , 'Lot name': row['Lot'], 
 								'Available': row['Available'], 'Percent Available': row['Available']/lot_details[row['Lot']]['capacity']}) 
 
 		hourly_rows.append(row_dict)
-		if idx % 10 == 0:
-			sys.stdout.write("* {}/{}\r".format(idx, '10000'))
+		if idx % 1000 == 0:
+			sys.stdout.write("* {}\r".format(idx))
 			sys.stdout.flush()
 
 	print("Creating new dataframe...")
@@ -101,18 +107,32 @@ def create_hourly_lot_datasets():
 
 def create_hourly_weather_datasets():
 
+	park_df = pd.read_csv("datasets/santa_monica_parking/parking_lot_counts_hourly.csv")
+
 	for year in glob.glob('datasets/santa_monica_weather/*'):
 		lines = [line.rstrip('\n') for line in open(year)]
 		hourly_rows = []
 		for line in lines:
 			rpt = ish_report().loads(line)
-			#row_dict = {'Date'}
-			print(rpt.datetime)
+			#print(dir(rpt))
+			try:
+				precip = rpt.get_additional_field('AA1').precipitation['depth']
+			except:
+				precip = "MISSING"
+			row_dict = {'Datetime': rpt.datetime, 'Air temperature': rpt.air_temperature, 'Preciptation': precip}
+			print(type(rpt.datetime))
+			hourly_rows.append(row_dict)
+		
+	weather_df = pd.DataFrame(hourly_rows)
 
+	#temp['Datetime'] = temp['Datetime'].dt.round('H')
+	#tmp['Datetime'].duplicated()
+	#tmp = tmp[~tmp['Datetime'].duplicated(keep='first')]
+	#park_df['Datetime'] = pd.to_datetime(park_df['Datetime'])
 
 if __name__ == '__main__':
 	#download_datasets()
 	create_hourly_lot_datasets()
-	create_hourly_weather_datasets()
+	#create_hourly_weather_datasets()
 
 
