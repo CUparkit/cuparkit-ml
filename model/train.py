@@ -2,17 +2,9 @@ import numpy as np
 import pandas as pd
 import keras
 from keras.utils import to_categorical
+from keras.callbacks import ModelCheckpoint 
 from sklearn.model_selection import train_test_split
 from models import build_lstm, build_mlp
-
-# convert an array of values into a dataset of sequences
-def create_sequences(dataset, time_lag=1):
-	X, Y = [], []
-	for i in range(len(dataset)-time_lag-1):
-		a = dataset[i:(i+time_lag), 0]
-		X.append(a)
-		Y.append(dataset[i + time_lag, 0])
-	return numpy.array(X), numpy.array(Y)
 
 # set random seed for reproducability
 np.random.seed(42)
@@ -43,30 +35,38 @@ for month, day, hour, lot in zip(month_list, day_list, hour_list, lot_list):
 X = np.array(input_feature_vectors)
 y = np.array(avail_list)
 
-time_lag = 5
-
+# generate input sequences of len = time_lag
+time_lag = 24
+step_size = 6
+n_steps = int((X.shape[0]/step_size)-time_lag-1)
 X_seq = []
 y_seq = []
-for i in range(X.shape[0]-time_lag-1):
-	X_seq.append(X[i:(i+time_lag)])
-	y_seq.append(y[i+time_lag])
+for i in range(n_steps):
+	X_seq.append(X[i*step_size:(i*step_size+time_lag)])
+	y_seq.append(y[i*step_size+time_lag])
 
 X_seq = np.array(X_seq)
 y_seq = np.array(y_seq)	
-
-print("X seq shape: {}".format(X_seq.shape))
-print("Y seq shape: {}".format(y_seq.shape))
 
 # train test split
 X_train, X_test, y_train, y_test = train_test_split(X_seq, y_seq, test_size=0.10, random_state=42)
 
 print("X train shape: {}".format(X_train.shape))
 print("Y train shape: {}".format(y_train.shape))
+print("X test shape: {}".format(X_test.shape))
+print("Y test shape: {}".format(y_test.shape))
 
 model = build_lstm(X.shape[1], time_lag)
 #model = build_mlp(X_train.shape[1])
 
+# checkpoint
+filepath = "model/trained/{epoch:02d}-{loss:.6f}-{val_loss:.6f}.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+callbacks_list = [checkpoint]
+
 model.fit(X_train, y_train, 
 		validation_data=(X_test,y_test),
+		callbacks=callbacks_list,
 		epochs=150, 
 		batch_size=10)
+	
