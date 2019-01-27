@@ -37,8 +37,10 @@ day = to_categorical(dt.weekday(), num_classes=7)
 hours = np.arange(0, 24)
 lots = np.arange(0, 18)
 
-print("Generating feature vectors and predictions for each lot")
+print("Generating predictions for each lot...")
+lot_preds = {}
 for lot in lots:
+	lot_id = lot
 	old_vecs = []
 	new_vecs = []
 	lot = to_categorical(lot, num_classes=18)
@@ -47,7 +49,6 @@ for lot in lots:
 		new_vecs.append(np.concatenate((month, day, hour, lot)))
 		old_vecs.append(np.concatenate((old_month, old_day, hour, lot)))
 	X = np.array(old_vecs + new_vecs)
-
 
 	# generate input sequences of len = time_lag
 	time_lag = 24
@@ -59,5 +60,12 @@ for lot in lots:
 		X_seq.append(X[i+1:(i+1+time_lag)])
 
 	X_seq = np.array(X_seq)
-	preds = model.predict(X_seq)
-	print(preds.flatten())
+	lot_preds[lot_id] = model.predict(X_seq)
+
+print("Saving predictions to the Firebase database...")
+for lot_id, preds in lot_preds.items():
+	# push latest forecast data to the database
+	db.child('lots').child(lot_id).update({'forecast':preds.flatten().tolist()})
+
+	# update the lastUpdated time stamp in database
+	db.update({'lastUpdated' : dt.strftime('%Y-%m-%d %H:%M:%S')})
