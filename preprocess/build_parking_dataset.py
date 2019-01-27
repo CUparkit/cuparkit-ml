@@ -27,12 +27,12 @@ lot_details = {	'Beach House Lot': {'id' : 0,  'capacity' : 274},
 				'Structure 1'  :   {'id' : 9,  'capacity' : 365},
 				'Structure 2'  :   {'id' : 10, 'capacity' : 654},
 				'Structure 3'  :   {'id' : 11, 'capacity' : 500},
-				'Structure 4'  :   {'id' : 11, 'capacity' : 698},
-				'Structure 5'  :   {'id' : 11, 'capacity' : 671},
-				'Structure 6'  :   {'id' : 11, 'capacity' : 747},
-				'Structure 7'  :   {'id' : 11, 'capacity' : 820},
-				'Structure 8'  :   {'id' : 11, 'capacity' : 1370},
-				'Structure 9'  :   {'id' : 11, 'capacity' : 298}}
+				'Structure 4'  :   {'id' : 12, 'capacity' : 698},
+				'Structure 5'  :   {'id' : 13, 'capacity' : 671},
+				'Structure 6'  :   {'id' : 14, 'capacity' : 747},
+				'Structure 7'  :   {'id' : 15, 'capacity' : 820},
+				'Structure 8'  :   {'id' : 16, 'capacity' : 1370},
+				'Structure 9'  :   {'id' : 17, 'capacity' : 298}}
 
 def download_datasets():
 	if not os.path.isdir('datasets'):
@@ -124,7 +124,6 @@ def create_hourly_weather_datasets():
 			except:
 				precip = 0.0
 			row_dict = {'Datetime': rpt.datetime, 'Air temperature': rpt.air_temperature, 'Preciptation': precip}
-			print(type(rpt.datetime))
 			hourly_rows.append(row_dict)
 		
 	weather_df = pd.DataFrame(hourly_rows)
