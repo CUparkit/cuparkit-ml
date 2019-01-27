@@ -17,10 +17,6 @@ config = {
 firebase = pyrebase.initialize_app(config)
 db = firebase.database()
 
-# Read in the predicitions from the past day
-print('Getting past predicitions from database...')
-y_old = np.random.rand(24)
-
 # load the trained model 
 model = load_model('model/trained/05-0.019137-0.019336.hdf5')
 
@@ -65,7 +61,7 @@ for lot in lots:
 print("Saving predictions to the Firebase database...")
 for lot_id, preds in lot_preds.items():
 	# push latest forecast data to the database
-	db.child('lots').child(lot_id).update({'forecast':preds.flatten().tolist()})
+	db.child('feed').child('lots').child(lot_id).update({'forecast':preds.flatten().tolist()})
 
 	# update the lastUpdated time stamp in database
-	db.update({'lastUpdated' : dt.strftime('%Y-%m-%d %H:%M:%S')})
+	db.child('feed').update({'lastUpdated' : dt.strftime('%Y-%m-%d %H:%M:%S')})
